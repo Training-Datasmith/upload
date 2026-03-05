@@ -97,10 +97,9 @@ class File implements \ArrayAccess, \Iterator, \Countable
 	protected $callbacks = array();
 
 	/**
-	 * @param array       $file
-	 * @param array|null  $callbacks
-	 */
-	public function __construct(array $file, &$callbacks = array())
+     * @param array|null  $callbacks
+     */
+    public function __construct(array $file, &$callbacks = array())
 	{
 		// store the file data for this file
 		$this->container = $file;

@@ -291,10 +291,7 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
 			// a specific valid file was requested
 			return isset($results[$index]) ? array($results[$index]) : array();
 		}
-		else
-		{
-			return $results;
-		}
+        return $results;
 	}
 
 	/**
@@ -338,21 +335,16 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
 			// a specific valid file was requested
 			return isset($results[$index]) ? array($results[$index]) : array();
 		}
-		else
-		{
-			return $results;
-		}
+        return $results;
 	}
 
 	/**
-	 * Registers a callback for a given event
-	 *
-	 * @param string $event
-	 * @param mixed  $callback
-	 *
-	 * @throws \InvalidArgumentException if not valid event or not callable second parameter
-	 */
-	public function register($event, $callback)
+     * Registers a callback for a given event
+     *
+     * @param mixed  $callback
+     * @throws \InvalidArgumentException if not valid event or not callable second parameter
+     */
+    public function register(string $event, $callback)
 	{
 		// check if this is a valid event type
 		if ( ! isset($this->callbacks[$event]))
@@ -436,14 +428,12 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
 	}
 
 	/**
-	 * Converts the silly different $_FILE structures to a flattened array
-	 *
-	 * @param string $name
-	 * @param array  $file
-	 *
-	 * @return array
-	 */
-	protected function unifyFile($name, $file)
+     * Converts the silly different $_FILE structures to a flattened array
+     *
+     *
+     * @return array
+     */
+    protected function unifyFile(string $name, array $file)
 	{
 		// storage for results
 		$data = array();
@@ -487,11 +477,9 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
 	}
 
 	/**
-	 * Adds a new uploaded file structure to the container
-	 *
-	 * @param array $entry
-	 */
-	protected function addFile(array $entry)
+     * Adds a new uploaded file structure to the container
+     */
+    protected function addFile(array $entry)
 	{
 		// add the new file object to the container
 		$this->container[] = new File($entry, $this->callbacks);
