@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * @package    Fuel\Upload
  * @version    2.0
@@ -10,29 +12,27 @@
 
 namespace Fuel\Upload\Providers;
 
-use League\Container\ServiceProvider;
 use Fuel\Upload\Upload;
-
+use League\Container\ServiceProvider;
 
 /**
  * Fuel ServiceProvider class for Upload
  */
 class FuelServiceProvider extends ServiceProvider
 {
-	/**
-	 * @var array
-	 */
-	protected $provides = array('upload');
+    /**
+     * @var array
+     */
+    protected $provides = ['upload'];
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function register()
-	{
-		$this->register('upload', function (array $config = null)
-		{
-			return new Upload($config);
-		});
+    /**
+     * {@inheritdoc}
+     */
+    public function register()
+    {
+        $this->register('upload', function (array $config = null) {
+            return new Upload($config);
+        });
 
-	}
+    }
 }

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * @package    Fuel\Upload
  * @version    2.0
@@ -13,4 +15,6 @@ namespace Fuel\Upload;
 /**
  * Exception class to indicate no files where uploaded
  */
-class NoFilesException extends \RuntimeException {}
+class NoFilesException extends \RuntimeException
+{
+}
