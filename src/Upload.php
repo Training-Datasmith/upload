@@ -56,8 +56,8 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
         // save-to-disk settings
         'path'            => '',
         'create_path'     => true,
-        'path_chmod'      => 0777,
-        'file_chmod'      => 0666,
+        'path_chmod'      => 0755,
+        'file_chmod'      => 0644,
         'auto_rename'     => true,
         'new_name'        => false,
         'overwrite'       => false,
@@ -81,14 +81,17 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
     public function __construct($config = null)
     {
         // input validation
-        if (! is_array($config) and ! is_null($config)) {
-            trigger_error('Uncaught TypeError: '.__METHOD__ .'(): Argument #1 ($config) must be of type ?array, '.gettype($config).' given, called in '.__FILE__.' on line '.__LINE__, E_USER_WARNING);
+        if (! is_array($config) && ! is_null($config)) {
+            throw new \TypeError(__METHOD__ . '(): Argument #1 ($config) must be of type ?array, ' . gettype($config) . ' given');
         }
 
         // override defaults if needed
         if (is_array($config)) {
             foreach ($config as $key => $value) {
-                array_key_exists($key, $this->defaults) and $this->defaults[$key] = $value;
+                if (! array_key_exists($key, $this->defaults)) {
+                    throw new \InvalidArgumentException('Unknown config key: ' . $key);
+                }
+                $this->defaults[$key] = $value;
             }
         }
 
@@ -114,33 +117,10 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
      */
     public function save($selection = null)
     {
-        // prepare the selection
-        if (func_num_args()) {
-            if (is_array($selection)) {
-                $filter = [];
-
-                foreach ($this->container as $file) {
-                    $match = true;
-                    foreach ($selection as $item => $value) {
-                        if ($value != $file->{$item}) {
-                            $match = false;
-                            break;
-                        }
-                    }
-
-                    $match and $filter[] = $file;
-                }
-
-                $selection = $filter;
-            } else {
-                $selection =  [$this[$selection]];
-            }
-        } else {
-            $selection = $this->container;
-        }
+        $files = func_num_args() ? $this->resolveSelection($selection) : $this->container;
 
         // loop through all selected files
-        foreach ($selection as $file) {
+        foreach ($files as $file) {
             $file->save();
         }
     }
@@ -152,35 +132,42 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
      */
     public function validate($selection = null)
     {
-        // prepare the selection
-        if (func_num_args()) {
-            if (is_array($selection)) {
-                $filter = [];
-
-                foreach ($this->container as $file) {
-                    $match = true;
-                    foreach ($selection as $item => $value) {
-                        if ($value != $file->{$item}) {
-                            $match = false;
-                            break;
-                        }
-                    }
-
-                    $match and $filter[] = $file;
-                }
-
-                $selection = $filter;
-            } else {
-                $selection =  [$this[$selection]];
-            }
-        } else {
-            $selection = $this->container;
-        }
+        $files = func_num_args() ? $this->resolveSelection($selection) : $this->container;
 
         // loop through all selected files
-        foreach ($selection as $file) {
+        foreach ($files as $file) {
             $file->validate();
         }
+    }
+
+    /**
+     * Resolves a selection parameter into an array of File objects
+     *
+     * @param integer|string|array $selection
+     *
+     * @return File[]
+     */
+    private function resolveSelection($selection)
+    {
+        if (is_array($selection)) {
+            $filter = [];
+
+            foreach ($this->container as $file) {
+                $match = true;
+                foreach ($selection as $item => $value) {
+                    if ($value !== $file->{$item}) {
+                        $match = false;
+                        break;
+                    }
+                }
+
+                $match and $filter[] = $file;
+            }
+
+            return $filter;
+        }
+
+        return [$this[$selection]];
     }
 
     /**
@@ -212,7 +199,8 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
     public function getAllFiles($index = null)
     {
         // return the selection
-        if ($selection = (func_num_args() and ! is_null($index)) ? $this[$index] : $this->container) {
+        $selection = (func_num_args() && ! is_null($index)) ? $this[$index] : $this->container;
+        if ($selection) {
             // make sure selection is an array
             is_array($selection) or $selection = [$selection];
         } else {
@@ -231,8 +219,8 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
      */
     public function getValidFiles($index = null)
     {
-        // prepare the selection
-        if (is_numeric($index)) {
+        // prepare the selection: integer index = Nth valid file; string = named field
+        if (is_int($index)) {
             $selection = $this->container;
         } else {
             $selection = (func_num_args() and ! is_null($index)) ? $this[$index] : $this->container;
@@ -253,7 +241,7 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
         }
 
         // return the results
-        if (is_numeric($index)) {
+        if (is_int($index)) {
             // a specific valid file was requested
             return isset($results[$index]) ? [$results[$index]] : [];
         }
@@ -269,8 +257,8 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
      */
     public function getInvalidFiles($index = null)
     {
-        // prepare the selection
-        if (is_numeric($index)) {
+        // prepare the selection: integer index = Nth invalid file; string = named field
+        if (is_int($index)) {
             $selection = $this->container;
         } else {
             $selection = (func_num_args() and ! is_null($index)) ? $this[$index] : $this->container;
@@ -291,8 +279,8 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
         }
 
         // return the results
-        if (is_numeric($index)) {
-            // a specific valid file was requested
+        if (is_int($index)) {
+            // a specific invalid file was requested
             return isset($results[$index]) ? [$results[$index]] : [];
         }
         return $results;
@@ -311,9 +299,9 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
             throw new \InvalidArgumentException($event.' is not a valid event');
         }
 
-        // check if the callback is acually callable
-        if (! is_callable($callback)) {
-            throw new \InvalidArgumentException('Callback passed is not callable');
+        // only allow Closure instances to prevent arbitrary callable injection
+        if (! ($callback instanceof \Closure)) {
+            throw new \InvalidArgumentException('Callback must be a Closure instance');
         }
 
         // store it
@@ -333,8 +321,10 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
 
         // update the configuration
         foreach ($item as $name => $value) {
-            // is this a valid config item? then update the defaults
-            array_key_exists($name, $this->defaults) and $this->defaults[$name] = $value;
+            if (! array_key_exists($name, $this->defaults)) {
+                throw new \InvalidArgumentException('Unknown config key: ' . $name);
+            }
+            $this->defaults[$name] = $value;
         }
 
         // and push it to all file objects in the containers
@@ -351,12 +341,17 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
     public function processFiles($selection = null)
     {
         // input validation
-        if (! is_array($selection) and ! is_null($selection)) {
-            trigger_error('Uncaught TypeError: '.__METHOD__ .'(): Argument #1 ($selection) must be of type ?array, '.gettype($selection).' given, called in '.__FILE__.' on line '.__LINE__, E_USER_WARNING);
+        if (! is_array($selection) && ! is_null($selection)) {
+            throw new \TypeError(__METHOD__ . '(): Argument #1 ($selection) must be of type ?array, ' . gettype($selection) . ' given');
         }
 
         // normalize the multidimensional fields in the $_FILES array
         foreach ($_FILES as $name => $file) {
+            // validate required keys exist in $_FILES entry
+            if (! isset($file['name'], $file['type'], $file['tmp_name'], $file['error'], $file['size'])) {
+                continue;
+            }
+
             // was it defined as an array?
             if (is_array($file['name'])) {
                 $data = $this->unifyFile($name, $file);
@@ -391,6 +386,7 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
             // we're not an the end of the element name nesting yet
             if (is_array($value)) {
                 // recurse with the array data we have at this point
+                // Note: 'element' key is intentionally omitted here; it is set only at leaf nodes
                 $data = array_merge(
                     $data,
                     $this->unifyFile(
@@ -461,10 +457,10 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
             // if it's in form notation, convert it to dot notation
             $offset = str_replace(['][', '[', ']'], ['.', '.', ''], $offset);
 
-            // see if we can find this element or elements
+            // see if we can find this element or elements (exact match or exact+dot prefix)
             $found = [];
             foreach ($this->container as $key => $file) {
-                if (strpos($file->element, $offset) === 0) {
+                if ($file->element === $offset || strpos($file->element, $offset . '.') === 0) {
                     $found[] = $this->container[$key];
                 }
             }
@@ -507,7 +503,7 @@ class Upload implements \ArrayAccess, \Iterator, \Countable
     #[\ReturnTypeWillChange]
     public function current()/*: mixed*/
     {
-        return $this->container[$this->index];
+        return $this->container[$this->index] ?? null;
     }
 
     #[\ReturnTypeWillChange]

@@ -26,6 +26,7 @@ class FileError
         2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
         3 => 'The uploaded file was only partially uploaded',
         4 => 'No file was uploaded',
+        5 => 'The uploaded file was only partially uploaded (unknown sub-error)',
         6 => 'Configured temporary upload folder is missing',
         7 => 'Failed to write uploaded file to disk',
         8 => 'Upload blocked by an installed PHP extension',
@@ -62,11 +63,11 @@ class FileError
     {
         $this->error = $error;
 
-        if (is_callable($langCallback)) {
+        if ($langCallback !== null && is_callable($langCallback)) {
             $this->message = call_user_func($langCallback, $error);
         }
 
-        if (empty($this->message)) {
+        if ($this->message === '' || $this->message === null) {
             $this->message = isset($this->messages[$error]) ? $this->messages[$error] : 'Unknown error message number: '.$error;
         }
     }

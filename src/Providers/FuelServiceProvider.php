@@ -30,9 +30,8 @@ class FuelServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->register('upload', function (array $config = null) {
+        $this->getContainer()->add('upload', function (?array $config = null) {
             return new Upload($config);
         });
-
     }
 }
