@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 /**
  * @package    Fuel\Upload
  * @version    2.0
@@ -9,12 +9,11 @@ declare(strict_types=1);
  * @copyright  2010-2025 Fuel Development Team
  * @link       http://fuelphp.com
  */
-
 namespace Fuel\Upload;
 
 /**
  * Exception class to indicate no files where uploaded
  */
-class NoFilesException extends \RuntimeException
+class No_Files_Exception extends \RuntimeException
 {
 }
