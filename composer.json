@@ -10,12 +10,27 @@
 			"email": "team@fuelphp.com"
 		}
 	],
+	"repositories": [
+		{
+			"type": "composer",
+			"url": "https://raw.githubusercontent.com/Training-Datasmith/composer-index/remote-test-2026-11-09",
+			"canonical": false
+		}
+	],
 	"require": {
 		"php": ">=5.3",
 		"ext-fileinfo": "*"
 	},
 	"require-dev": {
-		"codeception/codeception": "^5.0"
+		"codeception/codeception": "dev-remote-test-2026-10-07 as 5.3.5",
+		"codeception/module-asserts": "dev-remote-test-2026-10-07 as 3.3.0",
+		"nikic/php-parser": "dev-remote-test-2026-11-09 as 5.7.0",
+		"psr/container": "dev-remote-test-2026-10-07 as 2.0.2",
+		"psr/event-dispatcher": "dev-remote-test-2026-10-07 as 1.0.0",
+		"symfony/polyfill-ctype": "dev-remote-test-2026-10-07 as 1.33.0",
+		"symfony/polyfill-intl-grapheme": "dev-remote-test-2026-10-07 as 1.33.0",
+		"symfony/polyfill-intl-normalizer": "dev-remote-test-2026-10-07 as 1.33.0",
+		"symfony/polyfill-mbstring": "dev-remote-test-2026-10-07 as 1.33.0"
 	},
 	"autoload": {
 		"psr-4": {
@@ -26,5 +41,11 @@
 		"branch-alias": {
 			"dev-master": "2.0-dev"
 		}
+	},
+	"scripts": {
+		"test": [
+			"@php scripts/check-cluster-pins.php",
+			"vendor/bin/codecept run unit --no-ansi"
+		]
 	}
 }
